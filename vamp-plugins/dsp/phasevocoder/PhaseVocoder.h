@@ -64,7 +64,7 @@ public:
     void reset();
 
 protected:
-    void FFTShift(fl_t *src);
+    void FFTShift(const fl_t *src);
     void getMagnitudes(fl_t *mag);
     void getPhases(fl_t *theta);
     void unwrapPhases(fl_t *theta, fl_t *unwrapped);

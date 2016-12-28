@@ -53,13 +53,12 @@ PhaseVocoder::~PhaseVocoder()
     delete m_fft;
 }
 
-void PhaseVocoder::FFTShift(fl_t *src)
+void PhaseVocoder::FFTShift(const fl_t *src)
 {
     const int hs = m_n/2;
     for (int i = 0; i < hs; ++i) {
-        fl_t tmp = src[i];
-        src[i] = src[i + hs];
-        src[i + hs] = tmp;
+        m_time[i] = src[i + hs];
+        m_time[i + hs] = src[i];
     }
 }
 
@@ -67,10 +66,7 @@ void PhaseVocoder::processTimeDomain(const fl_t *src,
                                      fl_t *mag, fl_t *theta,
                                      fl_t *unwrapped)
 {
-    for (int i = 0; i < m_n; ++i) {
-        m_time[i] = src[i];
-    }
-    FFTShift(m_time);
+    FFTShift(src);
     m_fft->forward(m_time, m_real, m_imag);
     getMagnitudes(mag);
     getPhases(theta);
