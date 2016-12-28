@@ -21,6 +21,11 @@
 #include <cassert>
 
 #include <iostream>
+
+#ifdef __ARM_NEON__
+#include "arm_neon.h"
+#endif
+
 using std::cerr;
 using std::endl;
 
@@ -101,9 +106,28 @@ void PhaseVocoder::reset()
 }
 
 void PhaseVocoder::getMagnitudes(fl_t *mag)
-{	
-    for (int i = 0; i < m_n/2 + 1; i++) {
-	mag[i] = sqrt(m_real[i] * m_real[i] + m_imag[i] * m_imag[i]);
+{
+    int i = 0;
+    int count = m_n/2 + 1;
+#if defined(VAMP_FLOAT_MATH) && defined(__ARM_NEON__)
+    for (; i < count-3; i+=4) {
+        // get real/imag
+        float32x4_t vreal = vld1q_f32(m_real+i);
+        float32x4_t vimag = vld1q_f32(m_imag+i);
+        // sum^2
+        float32x4_t vsum = (vreal * vreal + vimag * vimag);
+        // save
+        vst1q_f32(mag+i, vsum);
+    }
+    for (i = 0; i < count-3; i+=4) {
+        mag[i+0] = sqrt(mag[i+0]);
+        mag[i+1] = sqrt(mag[i+1]);
+        mag[i+2] = sqrt(mag[i+2]);
+        mag[i+3] = sqrt(mag[i+3]);
+    }
+#endif
+    for (; i < count; i++) {
+        mag[i] = sqrt(m_real[i] * m_real[i] + m_imag[i] * m_imag[i]);
     }
 }
 
